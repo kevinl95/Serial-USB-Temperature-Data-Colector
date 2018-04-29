@@ -7,8 +7,10 @@ import matplotlib.pyplot as plt
 import os
 import serial
 import serial.tools.list_ports
+import threading
 import tkinter as tk
 import time
+from threading import Thread
 from time import sleep
 from tkinter import filedialog as fd
 from tkinter import ttk
@@ -18,11 +20,22 @@ running = True
 f = ""
 
 
+def timer(sp, interval):
+    global f
+    while running:
+        sleep(interval)
+        line = sp.readline().decode("utf-8")
+        data = [float(val) for val in line.split(' ')]
+        t = time.strftime("%Y-%m-%d %H:%M:%S")
+        newRow = "%s,%s,%s\n" % (t, data[0], data[1])
+        with open(f.name, "a") as datafile:
+            datafile.write(newRow)
+
+
 def collect(strPort, interval):
     global f
     # Ask for a location to save the CSV file
     f = fd.asksaveasfile(mode='w', defaultextension=".csv")
-    print(f)
     if f is None:  # User canceled save dialog
         return
     # Overwrite existing file
@@ -32,19 +45,14 @@ def collect(strPort, interval):
         # File does not exist yet
         pass
     sp = serial.Serial(strPort, 9600)
-    while running:
-        # Wait one minute
-        sleep(interval)
-        line = sp.readline().decode("utf-8")
-        data = [float(val) for val in line.split(' ')]
-        t = time.strftime("%Y-%m-%d %H:%M:%S")
-        newRow = "\n%s,%s,%s\n" % (t, data[0], data[1])
-        with open(f.name, "a") as datafile:
-            datafile.write(newRow)
+    time_thread = Thread(target=timer, args=(sp, interval))
+    time_thread.start()
 
 
 def plot():
     global f
+    global running
+    running = False
     try:
         # Plot Celcius
         t, c = np.genfromtxt(f, usecols=(0, 1), unpack=True, delimiter=',')
@@ -85,7 +93,7 @@ def main():
     serial_menu = ttk.OptionMenu(mainframe, serial_var, *ports)
     serial_menu.grid(row=0, column=1)
     counter = tk.IntVar()
-    counter.set(1)
+    counter.set(60)
     duration_label = ttk.Label(mainframe, textvariable=counter)
     duration_label.grid(row=1, column=1)
     duration_increment = ttk.Button(mainframe,
