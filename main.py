@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 
-import numpy as np
-import matplotlib
-matplotlib.use("TkAgg")
-import matplotlib.pyplot as plt
 import os
 import serial
 import serial.tools.list_ports
@@ -49,27 +45,9 @@ def collect(strPort, interval):
     time_thread.start()
 
 
-def plot():
-    global f
+def end():
     global running
     running = False
-    try:
-        # Plot Celcius
-        t, c = np.genfromtxt(f, usecols=(0, 1), unpack=True, delimiter=',')
-        plt.plot(t, c, '.r-')
-        plt.xlabel('Time')
-        plt.ylabel('Temperature (Celcius)')
-        plt.grid(True)
-        plt.show()
-        # Plot Fahrenheit
-        t, f = np.genfromtxt(f, usecols=(0, 2), unpack=True, delimiter=',')
-        plt.plot(t, f, '.r-')
-        plt.xlabel('Time')
-        plt.ylabel('Temperature (F)')
-        plt.grid(True)
-        plt.show()
-    except:
-        pass
 
 
 def onIncrement(counter):
@@ -78,7 +56,7 @@ def onIncrement(counter):
 
 def main():
     root = tk.Tk()
-    root.title("Serial USB Temperature Plotter")
+    root.title("Serial USB Temperature Data Collector")
     mainframe = ttk.Frame(root)
     mainframe.grid(column=0, row=0, sticky=(tk.N,tk.W,tk.E,tk.S))
     mainframe.pack()
@@ -105,7 +83,7 @@ def main():
                                                         counter.get()))
     collect_button.grid(row=2, column=0, sticky=(tk.E, tk.W))
     end_button = ttk.Button(mainframe, text="End Data Collection",
-                            command=lambda: plot())
+                            command=lambda: end())
     end_button.grid(row=2, column=1, sticky=(tk.E, tk.W))
     root.mainloop()
 
