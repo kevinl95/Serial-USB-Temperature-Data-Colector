@@ -66,7 +66,7 @@ def main():
     raw_ports = list(serial.tools.list_ports.comports())
     ports = []
     for p in raw_ports:
-        if p.description == "USB Serial":
+        if "USB Serial" in p.description:
             ports.append(p.device)
     serial_menu = ttk.OptionMenu(mainframe, serial_var, *ports)
     serial_menu.grid(row=0, column=1)
